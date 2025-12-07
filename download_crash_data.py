@@ -239,6 +239,33 @@ def filter_exclude_state_routes(df: pd.DataFrame) -> pd.DataFrame:
     return df_filtered
 
 
+def filter_nonvdot_system(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filter dataframe to only include NonVDOT records in the SYSTEM column.
+    """
+    original_count = len(df)
+
+    # Find the SYSTEM column
+    system_columns = ['SYSTEM', 'System', 'system']
+    system_col = None
+    for col in system_columns:
+        if col in df.columns:
+            system_col = col
+            break
+
+    if system_col is None:
+        logger.warning("Could not find SYSTEM column, skipping NonVDOT filter")
+        return df
+
+    # Filter to only keep NonVDOT records
+    mask = df[system_col].astype(str).str.upper().str.contains('NONVDOT', na=False)
+    df_filtered = df[mask].copy()
+
+    logger.info(f"Filtered from {original_count} to {len(df_filtered)} NonVDOT records")
+
+    return df_filtered
+
+
 def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Standardize column names to match expected format for index.html."""
     # Comprehensive mapping from API column names to expected column names
@@ -369,6 +396,16 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
         'NIGHT': 'Night?',
         'BELTED_UNBELTED': 'Unrestrained?',
         'MOTOR_NONMOTOR': 'Motorcycle?',
+
+        # Additional boolean flags
+        'DRUG_NODRUG': 'Drug Related?',
+        'GR_NOGR': 'Guardrail Related?',
+        'LGTRUCK_NONLGTRUCK': 'Lgtruck?',
+        'MAINLINE_YN': 'Mainline?',
+
+        # Speed and road attributes
+        'SPEED_DIFF_MAX': 'Max Speed Diff',
+        'RD_TYPE': 'RoadDeparture Type',
     }
 
     # Rename columns that exist
@@ -416,6 +453,13 @@ def main():
 
     if df.empty:
         logger.error("No records remaining after excluding state routes!")
+        sys.exit(1)
+
+    # Filter to only include NonVDOT system records
+    df = filter_nonvdot_system(df)
+
+    if df.empty:
+        logger.error("No NonVDOT records found after filtering!")
         sys.exit(1)
 
     # Standardize column names
