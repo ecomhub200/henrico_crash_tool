@@ -162,9 +162,6 @@ def filter_henrico_county(df: pd.DataFrame) -> pd.DataFrame:
     """Filter dataframe to only include Henrico County records."""
     original_count = len(df)
 
-    # Normalize column names (ArcGIS may use different naming)
-    df.columns = [col.replace(' ', '_') for col in df.columns]
-
     # Try multiple filter approaches
     mask = pd.Series([False] * len(df))
 
@@ -176,7 +173,7 @@ def filter_henrico_county(df: pd.DataFrame) -> pd.DataFrame:
             break
 
     # Check Physical Juris Name
-    name_columns = ['Physical_Juris_Name', 'PHYSICAL_JURIS_NAME', 'Physical Juris Name']
+    name_columns = ['Physical_Juris_Name', 'PHYSICAL_JURIS_NAME', 'Physical Juris Name', 'PHYSICAL_JURIS']
     for col in name_columns:
         if col in df.columns:
             for pattern in HENRICO_NAME_PATTERNS:
@@ -205,7 +202,7 @@ def filter_exclude_state_routes(df: pd.DataFrame) -> pd.DataFrame:
     original_count = len(df)
 
     # Find the route name column
-    route_columns = ['RTE_NAME', 'RTE NAME', 'Rte_Name', 'Route_Name', 'ROUTE_NAME', 'RTE_Name']
+    route_columns = ['RTE_NM', 'RTE_NAME', 'RTE NAME', 'Rte_Name', 'Route_Name', 'ROUTE_NAME', 'RTE_Name', 'RTE Name']
     route_col = None
     for col in route_columns:
         if col in df.columns:
@@ -243,46 +240,135 @@ def filter_exclude_state_routes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Standardize column names for consistency with existing data."""
-    # Map common variations to standard names
+    """Standardize column names to match expected format for index.html."""
+    # Comprehensive mapping from API column names to expected column names
     column_mapping = {
-        'Juris_Code': 'Juris Code',
-        'Physical_Juris_Name': 'Physical Juris Name',
+        # Core identifiers
+        'OBJECTID': 'OBJECTID',
+        'DOCUMENT_NBR': 'Document Nbr',
         'Document_Nbr': 'Document Nbr',
+
+        # Crash timing
+        'CRASH_YEAR': 'Crash Year',
         'Crash_Year': 'Crash Year',
+        'CRASH_DT': 'Crash Date',
         'Crash_Date': 'Crash Date',
+        'CRASH_MILITARY_TM': 'Crash Military Time',
         'Crash_Military_Time': 'Crash Military Time',
+
+        # Severity
+        'CRASH_SEVERITY': 'Crash Severity',
         'Crash_Severity': 'Crash Severity',
+        'K_PEOPLE': 'K_People',
+        'A_PEOPLE': 'A_People',
+        'B_PEOPLE': 'B_People',
+        'C_PEOPLE': 'C_People',
+
+        # Injury counts
+        'PERSONS_INJURED': 'Persons Injured',
         'Persons_Injured': 'Persons Injured',
+        'PEDESTRIANS_KILLED': 'Pedestrians Killed',
         'Pedestrians_Killed': 'Pedestrians Killed',
+        'PEDESTRIANS_INJURED': 'Pedestrians Injured',
         'Pedestrians_Injured': 'Pedestrians Injured',
+        'VEH_COUNT': 'Vehicle Count',
         'Vehicle_Count': 'Vehicle Count',
+
+        # Crash characteristics
+        'COLLISION_TYPE': 'Collision Type',
         'Collision_Type': 'Collision Type',
+        'WEATHER_CONDITION': 'Weather Condition',
         'Weather_Condition': 'Weather Condition',
+        'LIGHT_CONDITION': 'Light Condition',
         'Light_Condition': 'Light Condition',
+        'ROADWAY_SURFACE_COND': 'Roadway Surface Condition',
         'Roadway_Surface_Condition': 'Roadway Surface Condition',
+        'RELATION_TO_ROADWAY': 'Relation To Roadway',
         'Relation_To_Roadway': 'Relation To Roadway',
+        'ROADWAY_ALIGNMENT': 'Roadway Alignment',
         'Roadway_Alignment': 'Roadway Alignment',
+        'ROADWAY_SURFACE_TYPE': 'Roadway Surface Type',
         'Roadway_Surface_Type': 'Roadway Surface Type',
+        'ROADWAY_DEFECT': 'Roadway Defect',
         'Roadway_Defect': 'Roadway Defect',
+        'ROADWAY_DESCRIPTION': 'Roadway Description',
         'Roadway_Description': 'Roadway Description',
+
+        # Intersection/control
+        'INTERSECTION_TYPE': 'Intersection Type',
         'Intersection_Type': 'Intersection Type',
+        'TRAFFIC_CONTROL_TYPE': 'Traffic Control Type',
         'Traffic_Control_Type': 'Traffic Control Type',
+        'TRFC_CTRL_STATUS_TYPE': 'Traffic Control Status',
         'Traffic_Control_Status': 'Traffic Control Status',
+
+        # Work zone / school
+        'WORK_ZONE_RELATED': 'Work Zone Related',
         'Work_Zone_Related': 'Work Zone Related',
+        'WORK_ZONE_LOCATION': 'Work Zone Location',
         'Work_Zone_Location': 'Work Zone Location',
+        'WORK_ZONE_TYPE': 'Work Zone Type',
         'Work_Zone_Type': 'Work Zone Type',
+        'SCHOOL_ZONE': 'School Zone',
         'School_Zone': 'School Zone',
+
+        # First harmful event
+        'FIRST_HARMFUL_EVENT': 'First Harmful Event',
         'First_Harmful_Event': 'First Harmful Event',
+        'FIRST_HARMFUL_EVENT_LOC': 'First Harmful Event Loc',
         'First_Harmful_Event_Loc': 'First Harmful Event Loc',
+
+        # Jurisdiction
+        'JURIS_CODE': 'Juris Code',
+        'Juris_Code': 'Juris Code',
+        'PHYSICAL_JURIS': 'Physical Juris Name',
+        'Physical_Juris_Name': 'Physical Juris Name',
+
+        # Road classification
+        'FUN': 'Functional Class',
+        'Functional_Class': 'Functional Class',
+        'FAC': 'Facility Type',
+        'Facility_Type': 'Facility Type',
+        'AREA_TYPE': 'Area Type',
+        'Area_Type': 'Area Type',
+        'SYSTEM': 'SYSTEM',
+        'VSP': 'VSP',
+        'OWNERSHIP': 'Ownership',
+
+        # Planning/admin
+        'PLAN_DISTRICT': 'Planning District',
+        'Planning_District': 'Planning District',
+        'MPO_NAME': 'MPO Name',
+        'MPO_Name': 'MPO Name',
+        'VDOT_DISTRICT': 'VDOT District',
+        'VDOT_District': 'VDOT District',
+
+        # Route/location
+        'RTE_NM': 'RTE Name',
         'RTE_NAME': 'RTE Name',
         'RTE_Name': 'RTE Name',
-        'Functional_Class': 'Functional Class',
-        'Facility_Type': 'Facility Type',
-        'Area_Type': 'Area Type',
-        'VDOT_District': 'VDOT District',
-        'MPO_Name': 'MPO Name',
-        'Planning_District': 'Planning District',
+        'RNS_MP': 'RNS MP',
+        'NODE': 'Node',
+        'OFFSET': 'Node Offset (ft)',
+        'Node_Offset': 'Node Offset (ft)',
+
+        # Coordinates (keep lowercase)
+        'x': 'x',
+        'y': 'y',
+
+        # Boolean flags
+        'ALCOHOL_NOTALCOHOL': 'Alcohol?',
+        'BIKE_NONBIKE': 'Bike?',
+        'PED_NONPED': 'Pedestrian?',
+        'SPEED_NOTSPEED': 'Speed?',
+        'DISTRACTED_NOTDISTRACTED': 'Distracted?',
+        'DROWSY_NOTDROWSY': 'Drowsy?',
+        'HITRUN_NOT_HITRUN': 'Hitrun?',
+        'SENIOR_NOTSENIOR': 'Senior?',
+        'YOUNG_NOTYOUNG': 'Young?',
+        'NIGHT': 'Night?',
+        'BELTED_UNBELTED': 'Unrestrained?',
+        'MOTOR_NONMOTOR': 'Motorcycle?',
     }
 
     # Rename columns that exist
