@@ -63,6 +63,8 @@ def download_arcgis_page(where_clause: str, offset: int) -> list:
     params = {
         'where': where_clause,
         'outFields': '*',
+        'returnGeometry': 'true',
+        'outSR': '4326',
         'resultOffset': offset,
         'resultRecordCount': RECORDS_PER_REQUEST,
         'f': 'json'
@@ -76,7 +78,15 @@ def download_arcgis_page(where_clause: str, offset: int) -> list:
         raise Exception(f"ArcGIS API error: {data['error']}")
 
     features = data.get('features', [])
-    return [f.get('attributes', {}) for f in features]
+    records = []
+    for feature in features:
+        record = feature.get('attributes', {})
+        # Extract geometry coordinates
+        if 'geometry' in feature and feature['geometry']:
+            record['x'] = feature['geometry'].get('x')
+            record['y'] = feature['geometry'].get('y')
+        records.append(record)
+    return records
 
 
 def download_from_arcgis() -> pd.DataFrame:
