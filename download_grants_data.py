@@ -9,13 +9,11 @@ import logging
 import os
 import re
 import sys
-import time
 import zipfile
 from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
-import schedule
 
 # Configure logging
 logging.basicConfig(
@@ -586,15 +584,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # Run once immediately on startup
-    main()
-
-    # Schedule to run every Monday at 6:00 AM
-    schedule.every().monday.at("06:00").do(main)
-
-    logger.info("Scheduler started. Will download grants data every Monday at 6:00 AM.")
-
-    # Keep the script running
-    while True:
-        schedule.run_pending()
-        time.sleep(60)  # Check every minute
+    sys.exit(main())
