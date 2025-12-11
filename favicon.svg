@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+  <!-- Car body -->
+  <path d="M12 38 L16 28 Q18 24 24 24 L40 24 Q46 24 48 28 L52 38"
+        fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+  <!-- Car roof -->
+  <path d="M20 24 L24 18 Q26 16 32 16 Q38 16 40 18 L44 24"
+        fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+  <!-- Car base -->
+  <rect x="10" y="36" width="44" height="8" rx="3" fill="#f97316"/>
+  <!-- Wheels -->
+  <circle cx="20" cy="44" r="5" fill="#0f172a" stroke="#f97316" stroke-width="2"/>
+  <circle cx="44" cy="44" r="5" fill="#0f172a" stroke="#f97316" stroke-width="2"/>
+  <!-- Wheel centers -->
+  <circle cx="20" cy="44" r="2" fill="#f97316"/>
+  <circle cx="44" cy="44" r="2" fill="#f97316"/>
+</svg>
